@@ -1,19 +1,18 @@
 <template>
   <div>
-    <search/>
+    <search />
   </div>
-
 </template>
 
 <script>
-import Search from './views/Search.vue'
+import Search from "./views/Search.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    Search
-  }
-}
+    Search,
+  },
+};
 </script>
 
 <style>

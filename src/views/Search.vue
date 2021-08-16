@@ -1,35 +1,46 @@
 <template>
-<div>
+  <div>
+    <a-input-search
+      placeholder="input search text"
+      style="width: 200px"
+      @search="onSearch"
+    />
 
-  <a-input-search placeholder="input search text" style="width: 200px" @search="onSearch" />
-
-  <a-row>
-  <a-spin size="large" v-if="searching" class="center" style="margin-left:25%;margin-top:15%" tip="Loading..."/>
-  </a-row>
-  <div  v-if="!searching" class="center">
-  <apexchart
-      type="bar"
-      :options="options"
-      :series="series"
-  ></apexchart>
-  </div>
-  <a-drawer
+    <a-row>
+      <a-spin
+        size="large"
+        v-if="searching"
+        class="center"
+        style="margin-left: 25%; margin-top: 15%"
+        tip="Loading..."
+      />
+    </a-row>
+    <div v-if="!searching" class="center">
+      <apexchart
+        type="bar"
+        :options="options"
+        :series="series"
+        @dataPointMouseEnter="hoverPoint"
+      ></apexchart>
+    </div>
+    <a-drawer
       title="Basic Drawer"
       placement="bottom"
-      :visible="true"
+      :visible="drawerVisible"
       :mask="false"
-
-  >
-    <p>Some contents...</p>
-    <p>Some contents...</p>
-    <p>Some contents...</p>
-  </a-drawer>
-</div>
+      :closable="true"
+      @close="closeDrawer"
+    >
+      <p>Some contents...</p>
+      <p>Some contents...</p>
+      <p>Some contents...</p>
+    </a-drawer>
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'search',
+  name: "search",
   data() {
     return {
       searchQuery: "",
@@ -37,69 +48,76 @@ export default {
       publishYears: {},
       chartYears: [],
       chartData: [],
+      drawerVisible: false,
       options: {
         chart: {
-          id: "bookChart"
+          id: "bookChart",
         },
         xaxis: {
           categories: [],
-          type: 'category'
-        }
+          type: "category",
+        },
       },
       series: [
         {
           name: "Book count",
-          data: []
-        }
-      ]
-      }
-    },
+          data: [],
+        },
+      ],
+    };
+  },
   methods: {
     onSearch(val) {
       this.searchQuery = val;
       this.fetch();
     },
-    fetch () {
-      const axios = require('axios');
+    closeDrawer() {
+      this.drawerVisible = false;
+    },
+    hoverPoint() {
+      this.drawerVisible = true;
+    },
+    fetch() {
+      const axios = require("axios");
       let me = this;
       me.searching = true;
       axios({
-        method: 'get',
-        url: 'http://openlibrary.org/search.json',
-        responseType: 'json',
+        method: "get",
+        url: "http://openlibrary.org/search.json",
+        responseType: "json",
         params: {
-          q: me.searchQuery
-        }
+          q: me.searchQuery,
+        },
       })
-          .then(function (response) {
-            me.searching = false;
-            //console.log(response)
-            let docs = response.data && response.data.docs;
-            for(let doc of docs){
-              let pubYear = doc.first_publish_year;
-                if(!me.publishYears[pubYear]) {
-                  me.publishYears[pubYear] = 1;
-                } else {
-                  me.publishYears[pubYear]++;
-                }
-              }
-            for(const key in me.publishYears){
-              me.chartYears.push(key);
-              me.chartData.push(me.publishYears[key])
+        .then(function (response) {
+          me.searching = false;
+          //console.log(response)
+          let docs = response.data && response.data.docs;
+          for (let doc of docs) {
+            let pubYear = doc.first_publish_year;
+            if (!me.publishYears[pubYear]) {
+              me.publishYears[pubYear] = 1;
+            } else {
+              me.publishYears[pubYear]++;
             }
-            me.options.xaxis.categories = me.chartYears;
-            me.series[0].data = me.chartData;
-            console.log(me.publishYears)
-            console.log(me.chartYears);
-            console.log(me.chartData);
-          })
-      .catch( function(err){
-        me.searching = false;
-        console.log(err);
-      });
-    }
-  }
-}
+          }
+          for (const key in me.publishYears) {
+            me.chartYears.push(key);
+            me.chartData.push(me.publishYears[key]);
+          }
+          me.options.xaxis.categories = me.chartYears;
+          me.series[0].data = me.chartData;
+          console.log(me.publishYears);
+          console.log(me.chartYears);
+          console.log(me.chartData);
+        })
+        .catch(function (err) {
+          me.searching = false;
+          console.log(err);
+        });
+    },
+  },
+};
 </script>
 <style>
 .center {

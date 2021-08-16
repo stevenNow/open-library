@@ -1,28 +1,26 @@
 <template>
-  <div>
-
-  </div>
+  <div></div>
 </template>
 <script>
 export default {
-  name:"book-chart",
+  name: "book-chart",
   data() {
     return {
       options: {
         chart: {
-          id: "bookChart"
+          id: "bookChart",
         },
         xaxis: {
-          categories: [1, 2, 3]
-        }
+          categories: [1, 2, 3],
+        },
       },
       series: [
         {
           name: "series-1",
-          data: [1,2, 3]
-        }
-      ]
-    }
-  }
-}
+          data: [1, 2, 3],
+        },
+      ],
+    };
+  },
+};
 </script>
