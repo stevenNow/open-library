@@ -1,8 +1,10 @@
-import Vue from 'vue'
+import {createApp} from 'vue'
 import App from './App.vue'
 
-Vue.config.productionTip = false
-
-new Vue({
-  render: h => h(App),
-}).$mount('#app')
+import VueApexCharts from 'vue3-apexcharts'
+import Antd from 'ant-design-vue';
+import "ant-design-vue/dist/antd.less"
+const app = createApp(App);
+app.use(VueApexCharts)
+app.use(Antd);
+app.mount("#app");
