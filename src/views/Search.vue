@@ -24,7 +24,7 @@
       ></apexchart>
     </div>
     <a-drawer
-      title="Basic Drawer"
+      :title="drawerTitle"
       placement="bottom"
       :visible="drawerVisible"
       :mask="false"
@@ -34,16 +34,13 @@
     >
       <a-row>
         <a-col span="4" v-for="i in images" :key="i">
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://www.google.com"
-          >
+          <a target="_blank" rel="noopener noreferrer" :href="i.bookUrl">
             <a-image
+              style="margin-top: 25px"
               :width="200"
-              :src="i"
-              @click="imageClick"
+              :src="i.imgUrl"
               :preview="false"
+              :placeholder="true"
             />
           </a>
         </a-col>
@@ -65,6 +62,7 @@ export default {
       chartYears: [],
       chartData: [],
       drawerVisible: false,
+      drawerTitle: "Books",
       options: {
         chart: {
           id: "bookChart",
@@ -90,7 +88,6 @@ export default {
     closeDrawer() {
       this.drawerVisible = false;
     },
-    imageClick() {},
     hoverPoint(event, chartContext, config) {
       this.drawerVisible = true;
       this.images = [];
@@ -99,9 +96,13 @@ export default {
       let coverIds = this.covers[year];
       for (let c of coverIds) {
         if (c) {
-          this.images.push("http://covers.openlibrary.org/b/id/" + c + ".jpg");
+          this.images.push({
+            imgUrl: "http://covers.openlibrary.org/b/id/" + c.imgId + ".jpg",
+            bookUrl: "https://openlibrary.org/" + c.workLink,
+          });
         }
       }
+      this.drawerTitle = "Books from " + year;
     },
     fetch() {
       const axios = require("axios");
@@ -127,17 +128,23 @@ export default {
               me.publishYears[pubYear]++;
             }
             let coverImage = doc.cover_i;
+            let workLink = doc.key;
             if (!me.covers[pubYear]) {
-              me.covers[pubYear] = [coverImage];
+              me.covers[pubYear] = [{ imgId: coverImage, workLink: workLink }];
             } else {
-              me.covers[pubYear].push(coverImage);
+              me.covers[pubYear].push({
+                imgId: coverImage,
+                workLink: workLink,
+              });
             }
           }
           console.log("covers");
           console.log(me.covers);
           for (const key in me.publishYears) {
-            me.chartYears.push(key);
-            me.chartData.push(me.publishYears[key]);
+            if (key !== "undefined") {
+              me.chartYears.push(key);
+              me.chartData.push(me.publishYears[key]);
+            }
           }
           me.options.xaxis.categories = me.chartYears;
           me.series[0].data = me.chartData;
