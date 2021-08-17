@@ -5,6 +5,13 @@
       style="width: 200px"
       @search="onSearch"
     />
+    <a-button
+      v-if="pageCount > 1"
+      style="margin-left: 25px"
+      @click="loadNextPage"
+    >
+      More
+    </a-button>
 
     <a-row>
       <a-spin
@@ -50,11 +57,15 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   name: "search",
   data() {
     return {
       searchQuery: "",
+      pageCount: 0,
+      currentPage: 1,
       searching: false,
       publishYears: {},
       covers: {},
@@ -104,21 +115,27 @@ export default {
       }
       this.drawerTitle = "Books from " + year;
     },
-    fetch() {
-      const axios = require("axios");
+    setPageCount(resultCount) {
+      this.pageCount = Math.ceil(resultCount / 100);
+    },
+    resetPagination() {
+      this.pageCount = 0;
+      this.currentPage = 1;
+    },
+    loadNextPage() {
       let me = this;
       me.searching = true;
+      this.currentPage++;
       axios({
         method: "get",
         url: "http://openlibrary.org/search.json",
         responseType: "json",
         params: {
           q: me.searchQuery,
+          page: me.currentPage,
         },
       })
         .then(function (response) {
-          me.searching = false;
-          console.log(response);
           let docs = response.data && response.data.docs;
           for (let doc of docs) {
             let pubYear = doc.first_publish_year;
@@ -138,19 +155,65 @@ export default {
               });
             }
           }
-          console.log("covers");
-          console.log(me.covers);
+          me.options.xaxis.categories = [];
+          me.series[0].data = [];
           for (const key in me.publishYears) {
             if (key !== "undefined") {
-              me.chartYears.push(key);
-              me.chartData.push(me.publishYears[key]);
+              me.options.xaxis.categories.push(key);
+              me.series[0].data.push(me.publishYears[key]);
             }
           }
-          me.options.xaxis.categories = me.chartYears;
-          me.series[0].data = me.chartData;
-          console.log(me.publishYears);
-          console.log(me.chartYears);
-          console.log(me.chartData);
+          me.searching = false;
+        })
+        .catch(function (err) {
+          me.searching = false;
+          console.log(err);
+        });
+    },
+    fetch() {
+      let me = this;
+      me.searching = true;
+      this.resetPagination();
+      me.publishYears = {};
+      axios({
+        method: "get",
+        url: "http://openlibrary.org/search.json",
+        responseType: "json",
+        params: {
+          q: me.searchQuery,
+        },
+      })
+        .then(function (response) {
+          let resultCount = response.data && response.data.num_found;
+          me.setPageCount(resultCount);
+          let docs = response.data && response.data.docs;
+          for (let doc of docs) {
+            let pubYear = doc.first_publish_year;
+            if (!me.publishYears[pubYear]) {
+              me.publishYears[pubYear] = 1;
+            } else {
+              me.publishYears[pubYear]++;
+            }
+            let coverImage = doc.cover_i;
+            let workLink = doc.key;
+            if (!me.covers[pubYear]) {
+              me.covers[pubYear] = [{ imgId: coverImage, workLink: workLink }];
+            } else {
+              me.covers[pubYear].push({
+                imgId: coverImage,
+                workLink: workLink,
+              });
+            }
+          }
+          me.options.xaxis.categories = [];
+          me.series[0].data = [];
+          for (const key in me.publishYears) {
+            if (key !== "undefined") {
+              me.options.xaxis.categories.push(key);
+              me.series[0].data.push(me.publishYears[key]);
+            }
+          }
+          me.searching = false;
         })
         .catch(function (err) {
           me.searching = false;
