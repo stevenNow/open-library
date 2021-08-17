@@ -118,6 +118,9 @@ export default {
           });
         }
       }
+      this.setDrawerTitle(year);
+    },
+    setDrawerTitle(year) {
       this.drawerTitle = "Books from " + year;
     },
     setResultCount(resultCount) {
@@ -138,7 +141,7 @@ export default {
     loadNextPage() {
       let me = this;
       me.searching = true;
-      this.currentPage++;
+      me.currentPage++;
       axios({
         method: "get",
         url: "http://openlibrary.org/search.json",
@@ -149,32 +152,36 @@ export default {
         },
       })
         .then(function (response) {
-          let docs = response.data && response.data.docs;
-          me.setDisplayCount(docs.length);
-          for (let doc of docs) {
-            let pubYear = doc.first_publish_year;
-            if (!me.publishYears[pubYear]) {
-              me.publishYears[pubYear] = 1;
-            } else {
-              me.publishYears[pubYear]++;
+          if (!response.data.error) {
+            let docs = response.data && response.data.docs;
+            me.setDisplayCount(docs.length);
+            for (let doc of docs) {
+              let pubYear = doc.first_publish_year;
+              if (!me.publishYears[pubYear]) {
+                me.publishYears[pubYear] = 1;
+              } else {
+                me.publishYears[pubYear]++;
+              }
+              let coverImage = doc.cover_i;
+              let workLink = doc.key;
+              if (!me.covers[pubYear]) {
+                me.covers[pubYear] = [
+                  { imgId: coverImage, workLink: workLink },
+                ];
+              } else {
+                me.covers[pubYear].push({
+                  imgId: coverImage,
+                  workLink: workLink,
+                });
+              }
             }
-            let coverImage = doc.cover_i;
-            let workLink = doc.key;
-            if (!me.covers[pubYear]) {
-              me.covers[pubYear] = [{ imgId: coverImage, workLink: workLink }];
-            } else {
-              me.covers[pubYear].push({
-                imgId: coverImage,
-                workLink: workLink,
-              });
-            }
-          }
-          me.options.xaxis.categories = [];
-          me.series[0].data = [];
-          for (const key in me.publishYears) {
-            if (key !== "undefined") {
-              me.options.xaxis.categories.push(key);
-              me.series[0].data.push(me.publishYears[key]);
+            me.options.xaxis.categories = [];
+            me.series[0].data = [];
+            for (const key in me.publishYears) {
+              if (key !== "undefined") {
+                me.options.xaxis.categories.push(key);
+                me.series[0].data.push(me.publishYears[key]);
+              }
             }
           }
           me.searching = false;
