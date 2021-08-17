@@ -30,10 +30,24 @@
       :mask="false"
       :closable="true"
       @close="closeDrawer"
+      height="400"
     >
-      <p>Some contents...</p>
-      <p>Some contents...</p>
-      <p>Some contents...</p>
+      <a-row>
+        <a-col span="4" v-for="i in images" :key="i">
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href="https://www.google.com"
+          >
+            <a-image
+              :width="200"
+              :src="i"
+              @click="imageClick"
+              :preview="false"
+            />
+          </a>
+        </a-col>
+      </a-row>
     </a-drawer>
   </div>
 </template>
@@ -46,6 +60,8 @@ export default {
       searchQuery: "",
       searching: false,
       publishYears: {},
+      covers: {},
+      images: [],
       chartYears: [],
       chartData: [],
       drawerVisible: false,
@@ -74,8 +90,18 @@ export default {
     closeDrawer() {
       this.drawerVisible = false;
     },
-    hoverPoint() {
+    imageClick() {},
+    hoverPoint(event, chartContext, config) {
       this.drawerVisible = true;
+      this.images = [];
+      let index = config.dataPointIndex;
+      let year = this.options.xaxis.categories[index];
+      let coverIds = this.covers[year];
+      for (let c of coverIds) {
+        if (c) {
+          this.images.push("http://covers.openlibrary.org/b/id/" + c + ".jpg");
+        }
+      }
     },
     fetch() {
       const axios = require("axios");
@@ -91,7 +117,7 @@ export default {
       })
         .then(function (response) {
           me.searching = false;
-          //console.log(response)
+          console.log(response);
           let docs = response.data && response.data.docs;
           for (let doc of docs) {
             let pubYear = doc.first_publish_year;
@@ -100,7 +126,15 @@ export default {
             } else {
               me.publishYears[pubYear]++;
             }
+            let coverImage = doc.cover_i;
+            if (!me.covers[pubYear]) {
+              me.covers[pubYear] = [coverImage];
+            } else {
+              me.covers[pubYear].push(coverImage);
+            }
           }
+          console.log("covers");
+          console.log(me.covers);
           for (const key in me.publishYears) {
             me.chartYears.push(key);
             me.chartData.push(me.publishYears[key]);
