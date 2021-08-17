@@ -1,7 +1,7 @@
 <template>
   <div>
     <a-input-search
-      placeholder="input search text"
+      placeholder="Search"
       style="width: 200px"
       @search="onSearch"
     />
@@ -155,34 +155,7 @@ export default {
           if (!response.data.error) {
             let docs = response.data && response.data.docs;
             me.setDisplayCount(docs.length);
-            for (let doc of docs) {
-              let pubYear = doc.first_publish_year;
-              if (!me.publishYears[pubYear]) {
-                me.publishYears[pubYear] = 1;
-              } else {
-                me.publishYears[pubYear]++;
-              }
-              let coverImage = doc.cover_i;
-              let workLink = doc.key;
-              if (!me.covers[pubYear]) {
-                me.covers[pubYear] = [
-                  { imgId: coverImage, workLink: workLink },
-                ];
-              } else {
-                me.covers[pubYear].push({
-                  imgId: coverImage,
-                  workLink: workLink,
-                });
-              }
-            }
-            me.options.xaxis.categories = [];
-            me.series[0].data = [];
-            for (const key in me.publishYears) {
-              if (key !== "undefined") {
-                me.options.xaxis.categories.push(key);
-                me.series[0].data.push(me.publishYears[key]);
-              }
-            }
+            me.setData(docs, me);
           }
           me.searching = false;
         })
@@ -212,38 +185,53 @@ export default {
           me.setPageCount(resultCount);
           me.setResultCount(resultCount);
           me.setDisplayCount(docs.length);
-          for (let doc of docs) {
-            let pubYear = doc.first_publish_year;
-            if (!me.publishYears[pubYear]) {
-              me.publishYears[pubYear] = 1;
-            } else {
-              me.publishYears[pubYear]++;
-            }
-            let coverImage = doc.cover_i;
-            let workLink = doc.key;
-            if (!me.covers[pubYear]) {
-              me.covers[pubYear] = [{ imgId: coverImage, workLink: workLink }];
-            } else {
-              me.covers[pubYear].push({
-                imgId: coverImage,
-                workLink: workLink,
-              });
-            }
-          }
-          me.options.xaxis.categories = [];
-          me.series[0].data = [];
-          for (const key in me.publishYears) {
-            if (key !== "undefined") {
-              me.options.xaxis.categories.push(key);
-              me.series[0].data.push(me.publishYears[key]);
-            }
-          }
+          me.setData(docs, me);
           me.searching = false;
         })
         .catch(function (err) {
           me.searching = false;
           console.log(err);
         });
+    },
+    setData(docs, me) {
+      for (let doc of docs) {
+        let pubYear = doc.first_publish_year;
+        me.setPubYear(pubYear, me);
+        me.setCover(pubYear, doc, me);
+      }
+      me.resetChart(me);
+      me.setChartData(me);
+    },
+    setPubYear(pubYear, me) {
+      if (!me.publishYears[pubYear]) {
+        me.publishYears[pubYear] = 1;
+      } else {
+        me.publishYears[pubYear]++;
+      }
+    },
+    setCover(pubYear, doc, me) {
+      let coverImage = doc.cover_i;
+      let workLink = doc.key;
+      if (!me.covers[pubYear]) {
+        me.covers[pubYear] = [{ imgId: coverImage, workLink: workLink }];
+      } else {
+        me.covers[pubYear].push({
+          imgId: coverImage,
+          workLink: workLink,
+        });
+      }
+    },
+    resetChart(me) {
+      me.options.xaxis.categories = [];
+      me.series[0].data = [];
+    },
+    setChartData(me) {
+      for (const key in me.publishYears) {
+        if (key !== "undefined") {
+          me.options.xaxis.categories.push(key);
+          me.series[0].data.push(me.publishYears[key]);
+        }
+      }
     },
   },
 };
