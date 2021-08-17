@@ -9,9 +9,12 @@
       v-if="pageCount > 1"
       style="margin-left: 25px"
       @click="loadNextPage"
+      :disabled="currentPage >= pageCount"
     >
       More
     </a-button>
+
+    <p>Displaying {{ displayCount }} of {{ resultCount }} results.</p>
 
     <a-row>
       <a-spin
@@ -64,6 +67,8 @@ export default {
   data() {
     return {
       searchQuery: "",
+      resultCount: 0,
+      displayCount: 0,
       pageCount: 0,
       currentPage: 1,
       searching: false,
@@ -115,12 +120,20 @@ export default {
       }
       this.drawerTitle = "Books from " + year;
     },
+    setResultCount(resultCount) {
+      this.resultCount = resultCount;
+    },
     setPageCount(resultCount) {
       this.pageCount = Math.ceil(resultCount / 100);
     },
     resetPagination() {
       this.pageCount = 0;
+      this.displayCount = 0;
+      this.resultCount = 0;
       this.currentPage = 1;
+    },
+    setDisplayCount(displayed) {
+      this.displayCount += displayed;
     },
     loadNextPage() {
       let me = this;
@@ -137,6 +150,7 @@ export default {
       })
         .then(function (response) {
           let docs = response.data && response.data.docs;
+          me.setDisplayCount(docs.length);
           for (let doc of docs) {
             let pubYear = doc.first_publish_year;
             if (!me.publishYears[pubYear]) {
@@ -173,8 +187,10 @@ export default {
     fetch() {
       let me = this;
       me.searching = true;
-      this.resetPagination();
+      me.resetPagination();
       me.publishYears = {};
+      me.covers = {};
+      me.drawerVisible = false;
       axios({
         method: "get",
         url: "http://openlibrary.org/search.json",
@@ -185,8 +201,10 @@ export default {
       })
         .then(function (response) {
           let resultCount = response.data && response.data.num_found;
-          me.setPageCount(resultCount);
           let docs = response.data && response.data.docs;
+          me.setPageCount(resultCount);
+          me.setResultCount(resultCount);
+          me.setDisplayCount(docs.length);
           for (let doc of docs) {
             let pubYear = doc.first_publish_year;
             if (!me.publishYears[pubYear]) {
