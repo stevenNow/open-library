@@ -13,9 +13,7 @@
     >
       More
     </a-button>
-
     <p>Displaying {{ displayCount }} of {{ resultCount }} results.</p>
-
     <a-row>
       <a-spin
         size="large"
@@ -30,7 +28,7 @@
         type="bar"
         :options="options"
         :series="series"
-        @dataPointMouseEnter="hoverPoint"
+        @dataPointSelection="clickPoint"
       ></apexchart>
     </div>
     <a-drawer
@@ -40,7 +38,7 @@
       :mask="false"
       :closable="true"
       @close="closeDrawer"
-      height="400"
+      height="350"
     >
       <a-row>
         <a-col span="4" v-for="i in images" :key="i">
@@ -104,7 +102,7 @@ export default {
     closeDrawer() {
       this.drawerVisible = false;
     },
-    hoverPoint(event, chartContext, config) {
+    clickPoint(event, chartContext, config) {
       this.drawerVisible = true;
       this.images = [];
       let index = config.dataPointIndex;
