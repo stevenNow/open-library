@@ -6,9 +6,9 @@ To run this project locally:
 3. npm run serve
 4. Navigate to localhost:8080
 
-Note: Columns should be clicked instead of hovered to display cover images. I went
-with this design because when the columns are dense, it is hard to stay hovered 
-over the one you want to select.
+To use the app, search for a book title.
+Columns will then display book title counts by year. 
+Columns can be clicked to display book cover images. Book cover images link to more information about a book.
 
 ## Project setup
 ```
